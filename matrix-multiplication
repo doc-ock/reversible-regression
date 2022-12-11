@@ -1,0 +1,52 @@
+procedure mat_mult(int mat1[], int mat2[], int result[], int dim_n1, int dim_m1, int dim_m2)
+    local int i = 0
+    from i = 0 loop
+        local int j = 0
+        from j = 0 loop
+            local int k = 0
+            local int temp_mult = 0
+            from k = 0 loop
+                temp_mult += mat1[i*dim_m1+k]*mat2[k*dim_m2+j]
+                result[i*dim_m2+j] += temp_mult
+                temp_mult -= mat1[i*dim_m1+k]*mat2[k*dim_m2+j]
+                k += 1
+
+            until k = dim_m1
+            delocal int temp_mult = 0
+            delocal int k = dim_m1
+            j += 1
+        until j = dim_m2
+        delocal int j = dim_m2
+        i += 1
+    until i = dim_n1
+    
+    delocal int i = dim_n1
+
+
+procedure main()
+    //n = number of rows
+    //m = number of columns
+    //matrices are converted to 1D arrays by reading out each element of a row, then moving to the next one
+    //(left to right)
+    int dim_n1 = 3
+    int dim_m1 = 1
+    //no need for dim_n2 since it is dim_m1
+    int dim_m2 = 1
+    int mat1[dim_n1*dim_m1]
+    int mat2[dim_m1*dim_m2]
+    int result[dim_n1*dim_m2]
+
+    
+    mat1[0] += 1
+    mat1[1] += 2
+    mat1[2] += 3
+
+
+    
+    mat2[0] += 5
+    //mat2[1] += 2
+    //mat2[2] += 3
+    //mat2[3] += 4
+
+
+    call mat_mult(mat1, mat2, result, dim_n1, dim_m1, dim_m2)
