@@ -1,174 +1,147 @@
-procedure alloc_temp(int tmpo, stack tmp_stack)
-    //tmp_sp += 1
-    push(tmpo,tmp_stack)
-   //mp_stack[tmp_sp] += 0
+//DOESN'T WORK (see paper)
+
+//dummy and special_dummy were attempts to copy rows and perform computations within a loop
 
 
-procedure gaussian_elim(int mat[], int mat1[], int inv[], int inv1[], int dim, stack zero)
+//This code uses two matrices for every matrix described in the original algorithm
+//This is to include rational numbers
+
+procedure special_dummy(int row[], int mat[], int loc, int dim, int factor)
+    local int k = 0
+    from k = 0 loop
+// if row[k] = 0, copies
+//if row[k] = mat[loc*(dim)+k]*factor, returns to 0
+        row[k] ^= mat[loc*(dim)+k]*factor
+        k += 1
+    until k = dim
+    k -= dim
+    delocal int k = 0
+
+
+procedure dummy(int row[], int mat[], int loc, int dim)
+//loc is index of row you are copying    
+    local int k = 0
+    from k = 0 loop
+	    row[k] ^= mat[loc*dim+k]
+	k += 1
+	until k = dim
+	k -= dim
+	delocal int k = 0
+
+
+
+procedure gaussian_elim(int mat[], int matd[], int mat1[], int mat1d[], int mat2[], int mat2d[], int mat3[], int mat3d[], int inv[], int invd[], int dim)
     local int i = 0
+//loop over all rows
     from i = 0 loop
+//loop over all prior rows
         local int j = 0
         from j = 0 loop
-            local int row_multiplier1 = mat[i*(dim-1)+j]*mat1[j*(dim-1)+i]
-            local int row_multiplier2 = mat[j*(dim-1)+i]*mat1[i*(dim-1)+j]
+        //calculate multiplier needed to zero out entry j
+            if mat[j*(dim)+i] != 0 then
+                local int row_multiplier
+                local int row_multiplierd
 
-            local int k = 0
-            from k = 0 loop
-                local int holder1 = 0
-                holder1 += mat[i*(dim-1)+k]
-                local int holder2 = 0
-                holder2 += mat1[i*(dim-1)+k]
-                mat[i*(dim-1)+k] -= holder1
-                mat1[i*(dim-1)+k] -= holder2
-                    
-                local int holderjk1 = 0
-                holderjk1 += mat[j*(dim-1)+k]
-                local int holderjk2 = 0
-                holderjk2 += mat1[j*(dim-1)+k]
-                    
-                mat[i*(dim-1)+k] += holder1*holderjk2*row_multiplier2 - holder2*holderjk1*row_multiplier1
-                mat1[i*(dim-1)+k] += holder1*holderjk2*row_multiplier2
-                //mat[i*(dim-1)+k] -= mat[j*(dim-1)+k]*row_multiplier1
-                    
-                    
-                call alloc_temp(holderjk1, zero)
-                call alloc_temp(holderjk2, zero)
-                call alloc_temp(holder2, zero)
-                call alloc_temp(holder1, zero)
-                holder1 += inv[i*(dim-1)+k]
-                holder2 += inv1[i*(dim-1)+k]
-                    
-                inv[i*(dim-1)+k] -= holder1
-                inv1[i*(dim-1)+k] -= holder2
-                    
-                inv[i*(dim-1)+k] += holder1*mat1[j*(dim-1)+k]*row_multiplier2 - holder2*mat[j*(dim-1)+k]*row_multiplier1
-                inv1[i*(dim-1)+k] += holder1*mat1[j*(dim-1)+k]*row_multiplier2
-                //inv[i*(dim-1)+k] -= mat[j*(dim-1)+k]*row_multiplier
-                
-                call alloc_temp(holder2, zero)
-                call alloc_temp(holder1, zero)
-                    
-                delocal int holderjk2
-                delocal int holderjk1
-                delocal int holder2
-                delocal int holder1
-                k += 1
-            until k = dim
-            delocal int k = dim
-            call alloc_temp(row_multiplier1, zero)
-            call alloc_temp(row_multiplier2, zero)
-            delocal int row_multiplier2
-            delocal int row_multiplier1
-            
-            j += 1
-        until j = i
-        local int reducing_multiplier1 = mat[i*(dim-1)+i]
-        local int reducing_multiplier2 = mat1[i*(dim-1)+i]
+                row_multiplier += mat[i*(dim)+j]*matd[j*dim+i]
+                row_multiplierd += mat[j*(dim)+i]*matd[i*dim+j]
+                local int k = 0
+                from k = 0 loop
 
-        if reducing_multiplier1 != 0 
-            then local int k = 0
-                k += i
-                from k = i loop
-                    local int holder1 = 0
-                    holder1 += mat[i*(dim-1)+k]
-                    local int holder2 = 0
-                    holder2 += inv[i*(dim-1)+k]
-                    local int holder3 = 0
-                    holder3 += mat1[i*(dim-1)+k]
-                    local int holder4 = 0
-                    holder4 += inv1[i*(dim-1)+k]
-                    //call alloc_temp(holder1, zero)
-                    //call alloc_temp(holder2, zero)
+                //subtract j row*row multiplier from i row (last j loop, j=i), save to new i row
+
+                    mat1[i*(dim)+k] += mat[i*(dim)+k]*matd[j*dim+k]*row_multiplierd- matd[i*(dim)+k]*mat[j*dim+k]*row_multiplier
+                    inv[i*(dim)+k] += mat[i*(dim)+k]*matd[j*dim+k]*row_multiplierd- matd[i*(dim)+k]*mat[j*dim+k]*row_multiplier
+
+                    mat1d[i*(dim)+k] += matd[i*(dim)+k]*matd[j*dim+k]*row_multiplierd
+                    invd[i*(dim)+k] += matd[i*(dim)+k]*matd[j*dim+k]*row_multiplierd
 
                     
-                    mat[i*(dim-1)+k] -= holder1
-                    mat[i*(dim-1)+k] += holder1*reducing_multiplier2
-                    mat1[i*(dim-1)+k] -= holder3
-                    mat1[i*(dim-1)+k] += holder3*reducing_multiplier1
                     
-                    inv[i*(dim-1)+k] -= holder2
-                    inv[i*(dim-1)+k] += mat[i*(dim-1)+k]*reducing_multiplier2
-                    inv1[i*(dim-1)+k] -= holder4
-                    inv1[i*(dim-1)+k] += mat1[i*(dim-1)+k]*reducing_multiplier1
-                    
-                    
-                    call alloc_temp(holder4, zero)
-                    call alloc_temp(holder3, zero)
-                    call alloc_temp(holder2, zero)
-                    call alloc_temp(holder1, zero)
-                    
-                    delocal int holder4
-                    delocal int holder3
-                    delocal int holder2
-                    delocal int holder1
                     k += 1
                 until k = dim
-                k -= dim
-                delocal int k = 0
-        fi reducing_multiplier1 != 0 
-        call alloc_temp(reducing_multiplier1, zero)
-        call alloc_temp(reducing_multiplier2, zero)
-        delocal int reducing_multiplier2
-        delocal int reducing_multiplier1
-        j -= i
-        delocal int j = 0
-        i += 1
-    until i = dim
-    delocal int i = dim
-    
-    local int i = dim - 1 
-    from i = dim - 1 loop
-        local int j = i
-        from j = i loop
-            local int row_multiplier1 = mat[i*(dim-1)+j]
-            local int row_multiplier2 = mat1[i*(dim-1)+j]
-            //call alloc_temp(row_multiplier, zero)
+                delocal int k = dim
+                row_multiplier -= mat[i*(dim)+j]*matd[j*dim+i]
+                row_multiplierd -= mat[j*(dim)+i]*matd[i*dim+j]
+
+                delocal int row_multiplierd = 0
+                delocal int row_multiplier = 0
+
+            fi mat[j*(dim)+i] != 0
+            j += 1
+        until j = i+1
+
             local int k = 0
-            from k = 0 loop
-                local int holder1 = mat[i*(dim-1)+k]
-                local int holder2 = mat1[i*(dim-1)+k]
-                local int holder3 = inv[i*(dim-1)+k]
-                local int holder4 = inv1[i*(dim-1)+k]
-                local int holderjk1 = mat[j*(dim-1)+k]
-                local int holderjk2 = mat1[j*(dim-1)+k]
+            k += i
+            
+            local int reducing_multiplier = mat1[i*(dim)+i]
+            local int reducing_multiplierd = mat1d[i*(dim)+i]
+            //call dummy(row, mat, i, dim)
+            from k = i loop
+            //normalize row i based on A_ii (should be 1st entry in row now), save to new row i
 
+                mat2[i*(dim)+k] += mat1[i*(dim)+k]*reducing_multiplierd
+                inv[i*(dim)+k] += mat1[i*(dim)+k]*reducing_multiplierd
 
-                mat[i*(dim-1)+k] -= holder1
-                mat1[i*(dim-1)+k] -= holder2
-                inv[i*(dim-1)+k] -= holder3
-                inv1[i*(dim-1)+k] -= holder4
                 
-                mat[i*(dim-1)+k] += holder1*holderjk2*row_multiplier2 - holder2*holderjk1*row_multiplier1
-                mat1[i*(dim-1)+k] += holder1*holderjk2*row_multiplier2
-                inv[i*(dim-1)+k] += holder3*holderjk2*row_multiplier2 - holder4*holderjk1*row_multiplier1
-                inv1[i*(dim-1)+k] += holder3*holderjk2*row_multiplier2
-                
-                call alloc_temp(holder4, zero)
-                call alloc_temp(holder3, zero)
-                call alloc_temp(holder2, zero)
-                call alloc_temp(holder1, zero)
-                call alloc_temp(holderjk1, zero)
-                call alloc_temp(holderjk2, zero)
-                
-                delocal int holderjk2
-                delocal int holderjk1
-                delocal int holder4
-                delocal int holder3
-                delocal int holder2
-                delocal int holder1
+                mat2d[i*(dim)+k] += mat1d[i*(dim)+k]*reducing_multiplier
+                invd[i*(dim)+k] += mat1d[i*(dim)+k]*reducing_multiplier
+
 
                 k += 1
             until k = dim
             k -= dim
-            delocal int k = 0
-            call alloc_temp(row_multiplier1, zero)
-            call alloc_temp(row_multiplier2, zero)
-            delocal int row_multiplier2
-            delocal int row_multiplier1
+            k += i
+            reducing_multiplier -= mat1[i*(dim)+i]
+            reducing_multiplierd -= mat1d[i*(dim)+i]
 
-            j += 1
-        until j = dim - 1
-        j -= dim - 1
+            delocal int reducing_multiplierd
+            delocal int reducing_multiplier
+
+            k -= i
+            delocal int k = 0
+        j -= i+1
+        delocal int j = 0
+        i += 1
+    until i = dim
+    delocal int i = dim
+    //loop backwards
+    local int i = dim - 1 
+    from i = dim - 1 loop
+        local int j = i
+        if j < dim then
+            from j = i loop
+                //calculate multiplier needed to zero out jth entry
+                local int row_multiplier
+                local int row_multiplierd
+
+                row_multiplier += mat2[i*(dim)+j]
+                row_multiplierd += mat2d[j*(dim)+i]
+                
+                local int k = 0
+                from k = 0 loop
+                //subtract jth row times multiplier from ith row, save to new ith row
+                    mat3[i*dim+k] += mat2[i*(dim)+k]*mat2d[j*dim+k]*row_multiplierd - mat2d[i*(dim)+k]*mat2[j*dim+k]*row_multiplier
+                    inv[i*dim+k] += mat2[i*(dim)+k]*mat2d[j*dim+k]*row_multiplierd - mat2d[i*(dim)+k]*mat2[j*dim+k]*row_multiplier
+
+                    mat3d[i*dim+k] += mat2d[i*(dim)+k]*mat2d[j*dim+k]*row_multiplierd
+                    invd[i*dim+k] += mat2d[i*(dim)+k]*mat2d[j*dim+k]*row_multiplierd
+
+                    
+                    k += 1
+                until k = dim
+                k -= dim
+                delocal int k = 0
+                
+                row_multiplier -= mat2[i*(dim)+j]
+                row_multiplierd -= mat2d[j*(dim)+i]
+
+                delocal int row_multiplierd = 0
+                delocal int row_multiplier = 0
+                
+                j += 1
+            until j = dim - 1
+        fi i < dim
+        j -= dim-1
         j += i
         delocal int j = i
         i -= 1    
@@ -177,12 +150,17 @@ procedure gaussian_elim(int mat[], int mat1[], int inv[], int inv1[], int dim, s
 
     delocal int i = dim - 1
     
+//creates a matrix of all ones for the denominator
+procedure ones(int ones[], int dim)
+    local int k = 0
+    from k = 0 loop
+        ones[k] += 1
+        k += 1
+    until k = dim**2
+    k -= dim**2
+    delocal int k = 0
 
-
-
-
-
-
+//creates an identity matrix
 procedure id(int inv[], int dim)
     local int k = 1
     inv[0] += 1
@@ -196,16 +174,6 @@ procedure id(int inv[], int dim)
     delocal int k = 1
     
     
-procedure ones(int ones[], int dim)
-    local int k = 0
-    from k = 0 loop
-        ones[k] += 1
-        k += 1
-    until k = dim**2
-    k -= dim**2
-    delocal int k = 0
-
-
 procedure main()
     //n = number of rows
     //m = number of columns
@@ -214,28 +182,34 @@ procedure main()
     int dim = 3
 
     int mat[dim**2]
+    //matd is denominator of matrix d
+    int matd[dim**2]
+    int mat1[dim**2]
+    int mat1d[dim**2]
     int mat2[dim**2]
+    int mat2d[dim**2]
+    int mat3[dim**2]
+    int mat3d[dim**2]
+    
+    
     int inv[dim**2]
-    int inv2[dim**2]
+    int invd[dim**2]
 
-    stack zero
-    // have to select matrix where det is 1
-    //int only, can't do Gaussian elimination like this
-    //divide by 0 error, have to do safety check
-    //floating point numbers are inherently reversible
-    mat[0] += 2 
+    // have to select matrix where det is 1, otherwise matrix is singular
+
+    mat[0] += 1 
     mat[1] += 0 
-    mat[2] += -1
-    mat[3] += 5
+    mat[2] += 0
+    mat[3] += 0
     mat[4] += 1
     mat[5] += 0
     mat[6] += 0
-    mat[7] += 1
-    mat[8] += 3
+    mat[7] += 0
+    mat[8] += 1
 
 
     //sets inverse to identity to begin process
     call id(inv, dim)
-    call id(inv2, dim)
-    call ones(mat2, dim)
-    call gaussian_elim(mat, mat2, inv, inv2, dim, zero)
+    call ones(invd, dim)
+    call ones(matd, dim)
+    call gaussian_elim(mat, matd, mat1, mat1d, mat2, mat2d, mat3, mat3d, inv, invd, dim)
